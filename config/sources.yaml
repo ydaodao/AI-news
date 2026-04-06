@@ -1,0 +1,33 @@
+rss_sources:
+  - name: "arxiv AI"
+    url: "https://rss.arxiv.org/rss/cs.AI"
+    interval_minutes: 60
+  - name: "Hacker News AI"
+    url: "https://hnrss.org/newest?q=AI+LLM"
+    interval_minutes: 30
+
+wechat_accounts:  # 通过 WeWe RSS 转成 RSS 消费
+  - name: "量子位"
+    wewerss_id: "xxx"
+  - name: "机器之心"
+    wewerss_id: "yyy"
+
+bilibili_uppers:
+  - name: "某UP主"
+    uid: "12345678"
+    use_subtitle: true   # 优先用官方字幕，跳过Whisper
+
+douyin_creators:
+  - name: "某博主"
+    profile_url: "https://www.douyin.com/user/MS4..."
+    check_interval_hours: 2
+
+llm:
+  provider: "anthropic"        # 或 openai / deepseek
+  model: "claude-haiku-4-5"   # 摘要任务用Haiku够了，省钱
+  batch_size: 8
+
+whisper:
+  model: "large-v3"
+  device: "cuda"
+  language: "zh"
