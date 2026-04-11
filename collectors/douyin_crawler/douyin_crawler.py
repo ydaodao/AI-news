@@ -1,10 +1,10 @@
 import json
+import yaml
 from playwright.sync_api import sync_playwright
-from network_listener import DouyinNetworkListener
-from author_page import DouyinAuthorPage
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from utils.playwright_utils import find_pages_by_title, open_page
+from collectors.douyin_crawler.network_listener import DouyinNetworkListener
+from collectors.douyin_crawler.author_page import DouyinAuthorPage
+from utils.playwright_utils import open_page
+from feishu.robot_service import send_ai_news_card
 
 def main():
     with sync_playwright() as p:
@@ -12,11 +12,11 @@ def main():
         context = browser.contexts[0]
         listener = DouyinNetworkListener()
 
-        with open("douyin_author_list.json", "r") as f:
-            data = json.load(f)
+        with open("collectors/douyin_crawler/author_list.yaml", "r") as f:
+            data = yaml.safe_load(f)
         for item in data["author_list"]:
-            name = item["name"]
-            url = item["url"]
+            name = item["nickname"]
+            url = item["main_page_url"]
             page = open_page(context, url, listener=listener)
             # page = find_pages_by_title(context, "大师的AI小灶")[0]["page"]
 
@@ -33,10 +33,33 @@ def main():
             # douyin.open_video_and_get_detail()
 
             # 👇 直接拿接口数据
+
+            template_variable = {
+                "news_list": []
+            }
+
+            # template_variable = {
+            #     "news_list": [
+            #         {
+            #             "title": "测试标题",
+            #             "content": "测试内容",
+            #             "url": "https://www.baidu.com",
+            #         }
+            #     ]
+            # }
+
             for v in listener.video_list:
                 print(v)
+                template_variable["news_list"].append({
+                    "title": v["title"],
+                    "content": v["desc"],
+                    "url": v["play_url"]
+                })
+                # print(v["play_url"])
                 # 👇 保存视频信息到数据库
-                save_video_info(v, name)
+                # save_video_info(v, name)
+
+            send_ai_news_card(template_variable)
 
 if __name__ == "__main__":
     main()

@@ -33,7 +33,8 @@ class DouyinNetworkListener:
     def parse_video(self, item):
         return {
             "aweme_id": item.get("aweme_id"),
-            "desc": item.get("desc"),
+            "title": item.get("desc").split("\n")[0],
+            "desc": "\n".join(item.get("desc").split("\n")[1:]),
             "author": item.get("author", {}).get("nickname"),
             "play_url": self.get_play_url(item),
             # "cover": item.get("video", {}).get("cover", {}).get("url_list", [None])[0],

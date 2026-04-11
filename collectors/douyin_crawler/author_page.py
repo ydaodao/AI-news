@@ -1,14 +1,7 @@
 import random
 import time
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from utils.playwright_utils import find_element
-
-# 反爬措施：随机 sleep
-def random_sleep(a=1, b=3):
-    time.sleep(random.uniform(a, b))
-# 反爬措施：鼠标移动轨迹、viewport 随机
-
+from collectors.douyin_crawler.anti_detect import random_sleep, random_mouse_move
 
 class DouyinAuthorPage:
     def __init__(self, page):
