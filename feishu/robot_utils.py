@@ -30,7 +30,7 @@ def load_settings() -> AppSettings:
     )
 
 def build_client(settings: AppSettings) -> lark.Client:
-    return lark.Client.builder().app_id(settings.app_id).app_secret(settings.app_secret).log_level(lark.LogLevel.DEBUG).build()
+    return lark.Client.builder().app_id(settings.app_id).app_secret(settings.app_secret).log_level(lark.LogLevel.INFO).build()
 
 
 def build_ws_client(

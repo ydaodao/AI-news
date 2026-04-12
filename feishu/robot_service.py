@@ -159,4 +159,4 @@ def send_ai_news_card(template_variable: dict={}):
 
     # 处理业务结果
     lark.logger.info(f"client.im.v1.message.create success, msg_id: {response.data.message_id}")
-    lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
+    # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
