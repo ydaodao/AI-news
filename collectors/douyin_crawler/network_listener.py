@@ -58,13 +58,13 @@ class DouyinNetworkListener:
         
         return {
             "aweme_id": item.get("aweme_id"),
+            "nickname": item.get("author", {}).get("nickname", ""),
             "title": title,
             "desc": desc,
             "play_url": self.get_play_url(item),
             "create_time": create_time_str,
 
-            # "like": item.get("statistics", {}).get("digg_count"),
-            # "comment": item.get("statistics", {}).get("comment_count"),
+            "digg_count": item.get("statistics", {}).get("digg_count", 0),
         }
 
     def get_play_url(self, item):

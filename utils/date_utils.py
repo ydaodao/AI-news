@@ -60,17 +60,22 @@ class DateUtils:
         dt = DateUtils.str_to_datetime(date_str, fmt)
         return dt.timestamp() if unit == "s" else dt.timestamp() * 1000
     
-    # -- 日期格式化 --
+    # -- 转换：datetime转字符串 --
 
     @staticmethod
     def datetime_to_str(dt: datetime, fmt: str = FMT_STD) -> str:
         """将 datetime 对象格式化为字符串"""
         return dt.strftime(fmt)
 
+    # -- 转换：字符串转字符串 --
     @staticmethod
-    def datetime_to_strdate(dt: datetime) -> str:
-        """将 datetime 对象格式化为日期字符串"""
-        return dt.strftime(DateUtils.FMT_DATE)
+    def str_to_str(date_str: str, orgin_fmt: str = FMT_STD, target_fmt: str = FMT_STD) -> str:
+        """将日期字符串格式化为另一个日期字符串"""
+        dt = DateUtils.str_to_datetime(date_str, orgin_fmt)
+        return DateUtils.datetime_to_str(dt, target_fmt)
+
+
+
 
     # --- 3. 爬虫专用：相对时间解析 ---
 
