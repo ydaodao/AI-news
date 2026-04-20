@@ -25,7 +25,7 @@ def main():
         template_variable = {
             "news_list": []
         }
-        x_days_ago = DateUtils.parse_relative_time("100天前")
+        x_days_ago = DateUtils.parse_relative_time("140天前")
 
         with open("collectors/douyin_crawler/author_list.yaml", "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -34,7 +34,6 @@ def main():
             url = item["main_page_url"]
             listener = DouyinNetworkListener()
             page = open_page(context, url, listener=listener)
-            # page = find_pages_by_title(context, "大师的AI小灶")[0]["page"]
 
             douyin = DouyinAuthorPage(page)
             # 👇 获取抖音博主的信息
@@ -44,12 +43,8 @@ def main():
             # 👇 触发接口加载（关键）
             # douyin.scroll_page()
 
-
-            # 👇 打开视频并获取详情
-            # douyin.open_video_and_get_detail()
-
             # 👇 直接拿接口数据
-            logger.info(f"获取到的【{name}】的{len(listener.video_list)}条视频")
+            logger.info(f"获取到【{name}】的{len(listener.video_list)}条视频")
             for v in listener.video_list:
                 creat_time_dt = DateUtils.str_to_datetime(v["create_time"])
 
@@ -62,20 +57,22 @@ def main():
                         "url": v["play_url"],
                         "digg_count": v["digg_count"]
                     })
-                # print(v["play_url"])
-                # 👇 保存视频信息到数据库
-                # save_video_info(v, name)
+
+            # 👇 关闭页面
             page.close()
         
-
+        # 构建飞书卡片数据
         card_title = DateUtils.now_str(fmt="%m-%d")
-        # template_variable 的 new_list 按 digg_count 排序
+        # template_variable 的 new_list 按 digg_count 排序，并加上序号
         template_variable["news_list"].sort(key=lambda x: x.get("digg_count", 0), reverse=True)
+        for i, item in enumerate(template_variable["news_list"]):
+            item["index"] = i + 1
         # template_variable 分每20条发送一次
         batch_size = 20
         total_batches = math.ceil(len(template_variable["news_list"]) / batch_size)
         for i in range(0, len(template_variable["news_list"]), batch_size):
             news_list = template_variable["news_list"][i:i+batch_size]
+            # 👇 发送飞书卡片
             logger.info(news_list)
             send_ai_news_card({
                 "card_title": f"{card_title} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
