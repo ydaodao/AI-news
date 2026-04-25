@@ -10,13 +10,8 @@ from collectors.douyin_crawler.author_page import DouyinAuthorPage
 from utils.playwright_utils import open_page
 from feishu.robot_service import send_ai_news_card
 from utils.date_utils import DateUtils
-import logging
-import sys
+from loguru import logger
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-sys.stdout.flush()
-
-logger = logging.getLogger(__name__)
 
 def main():
     with sync_playwright() as p:

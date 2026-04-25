@@ -1,4 +1,3 @@
-import logging
 import os
 from time import sleep
 from typing import Any, Dict, List, Optional
@@ -9,18 +8,10 @@ from utils.file_utils import FileUtils
 from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
 
-
 LOCAL_DEV = os.getenv("LOCAL_DEV") == "true"
 PAGELOAD_TIMEOUT_MS = 60000 if not LOCAL_DEV else 10000
 
-logger = logging.getLogger(__name__)
-
-
-def configure_logging(level: int = logging.INFO) -> None:
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+from loguru import logger
 
 
 def list_pages(context: BrowserContext) -> None:
@@ -409,7 +400,6 @@ def perform_action(
 
 
 if __name__ == "__main__":
-    configure_logging()
     with sync_playwright() as p:
         p: Playwright
         browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
