@@ -4,7 +4,7 @@ from datetime import timedelta
 from time import sleep
 import json
 import yaml
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Playwright
 from collectors.douyin_crawler.network_listener import DouyinNetworkListener
 from collectors.douyin_crawler.author_page import DouyinAuthorPage
 from utils.playwright_utils import open_page
