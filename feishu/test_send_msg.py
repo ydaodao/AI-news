@@ -3,7 +3,7 @@ import json
 import lark_oapi as lark
 from lark_oapi.api.im.v1 import *
 
-from feishu.robot_service import send_ai_news_card
+from feishu.robot_service import MsgBotService
 
 
 # SDK 使用说明: https://open.feishu.cn/document/uAjLw4CM/ukTMukTMukTM/server-side-sdk/python--sdk/preparations-before-development
@@ -24,7 +24,7 @@ def main():
     }
     # response: CreateMessageResponse = bot.send_ai_news_card(template_variable=template_variable)
 
-    send_ai_news_card(template_variable)
+    MsgBotService().send_ai_news_card(template_variable=template_variable)
 
     # 发起请求
     # client.im.v1.message.create(request)

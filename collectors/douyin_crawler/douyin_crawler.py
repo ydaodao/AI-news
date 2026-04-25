@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright, Playwright
 from collectors.douyin_crawler.network_listener import DouyinNetworkListener
 from collectors.douyin_crawler.author_page import DouyinAuthorPage
 from utils.playwright_utils import open_page
-from feishu.robot_service import send_ai_news_card
+from feishu.robot_service import MsgBotService
 from utils.date_utils import DateUtils
 from loguru import logger
 
@@ -69,7 +69,7 @@ def main():
             news_list = template_variable["news_list"][i:i+batch_size]
             # 👇 发送飞书卡片
             logger.info(news_list)
-            send_ai_news_card({
+            MsgBotService().send_ai_news_card(template_variable={
                 "card_title": f"{card_title} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
                 "news_list": news_list
             })

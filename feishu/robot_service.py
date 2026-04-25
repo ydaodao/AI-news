@@ -17,10 +17,6 @@ from lark_oapi.event.callback.model.p2_card_action_trigger import (
 from feishu.robot_utils import send_message, template_card_content, build_client, load_settings
 
 
-def _now_utc8_str() -> str:
-    return datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S (UTC+8)")
-
-
 @dataclass(frozen=True)
 class BotTemplates:
     ai_news_chat_id: str
@@ -41,17 +37,36 @@ def load_bot_templates() -> BotTemplates:
         ai_news_card_id=ai_news_card_id
     )
 
-@dataclass
-class BotService:
+
+@dataclass(frozen=True)
+class MsgBotService:
     client: lark.Client
     templates: BotTemplates = load_bot_templates()
 
+    def __init__(self, client: lark.Client = None):
+        self.client = client or build_client(load_settings())
+    
     def send_ai_news_card(self, chat_id: str = templates.ai_news_chat_id, template_variable: dict = None):
         content = template_card_content(
             template_id=self.templates.ai_news_card_id,
             template_variable=template_variable,
         )
-        return send_message(self.client, "chat_id", chat_id, "interactive", content)
+
+        response: CreateMessageResponse = send_message(self.client, "chat_id", chat_id, "interactive", content)
+        # 处理失败返回
+        if not response.success():
+            lark.logger.error(
+                f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+            return
+
+        # 处理业务结果
+        lark.logger.info(f"client.im.v1.message.create success, msg_id: {response.data.message_id}")
+        # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
+
+@dataclass
+class BotService:
+    client: lark.Client
+    templates: BotTemplates = load_bot_templates()
 
     # def send_welcome_card(self, open_id: str):
     #     content = template_card_content(
@@ -146,17 +161,3 @@ def build_event_handler(bot: BotService) -> lark.EventDispatcherHandler:
         .register_p2_card_action_trigger(bot.on_card_action)
         .build()
     )
-
-# 主动发送卡片
-def send_ai_news_card(template_variable: dict={}):
-    bot = BotService(client=build_client(load_settings()))
-    response: CreateMessageResponse = bot.send_ai_news_card(template_variable=template_variable)
-    # 处理失败返回
-    if not response.success():
-        lark.logger.error(
-            f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
-        return
-
-    # 处理业务结果
-    lark.logger.info(f"client.im.v1.message.create success, msg_id: {response.data.message_id}")
-    # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
