@@ -13,14 +13,14 @@ from utils.date_utils import DateUtils
 from loguru import logger
 
 
-def main():
+def main(relative_time: str = "140天前"):
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
         context = browser.contexts[0]
         template_variable = {
             "news_list": []
         }
-        x_days_ago = DateUtils.parse_relative_time("140天前")
+        x_days_ago = DateUtils.parse_relative_time(relative_time)
 
         with open("collectors/douyin_crawler/author_list.yaml", "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
@@ -46,7 +46,7 @@ def main():
                 # 如果create_time 在最近x天内，才添加到news_list
                 if creat_time_dt > x_days_ago:
                     template_variable["news_list"].append({
-                        "date": DateUtils.str_to_str(v["create_time"], target_fmt="%m.%d"),
+                        "date": DateUtils.str_to_str(v["create_time"], to_fmt="%m.%d"),
                         "title": f"{v['title']} - {v['digg_count']}赞 {v['nickname']}",
                         "content": v["desc"],
                         "url": v["play_url"],

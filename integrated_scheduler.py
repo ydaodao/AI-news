@@ -4,6 +4,7 @@ import os
 import asyncio
 from croniter import croniter
 from loguru import logger
+from collectors.douyin_crawler.douyin_crawler import main as douyin_crawler_main
 
 # 加载环境变量
 from dotenv import load_dotenv
@@ -122,10 +123,10 @@ cron_scheduler = CronScheduler()
 
 # ------------ 任务设置 ------------------
 
-# def run_main_task(task_name):
-#     """执行主定时任务"""
-#     print(f"\n[{datetime.now()}] 执行任务: {task_name}")
-#     asyncio.run(main(task_name))
+def run_douyin_crawler_task(relative_time):
+    """执行抖音爬虫定时任务"""
+    logger.info(f"执行抖音爬虫任务: {relative_time}")
+    asyncio.run(douyin_crawler_main(relative_time))
 
 # ------------ 任务结束 ------------------
 
@@ -138,8 +139,8 @@ def setup_cron_jobs():
     # 每天21:00执行截图任务
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
-    # 每周一、二、三、四、五的7:00执行 日报任务
-    # cron_scheduler.add_cron_job('0 7 * * 1,2,3,4,5,6,7', lambda: run_main_task("daily_news"), '日报任务')
+    # 每周一、二、三、四、五的7:00执行 抖音爬虫日报任务
+    cron_scheduler.add_cron_job('0 7 * * 2,4,6', lambda: run_douyin_crawler_task("14天前"), '抖音爬虫日报任务')
 
 def start_cron_scheduler():
     """启动 cron 调度器"""
@@ -150,7 +151,6 @@ def start_cron_scheduler():
 if __name__ == "__main__":
     if LOCAL_DEV:
         logger.info("本地开发模式，不启动 cron 调度器")
-        # keep_gzh_online_task()
-        # run_main_task('daily_news')
+        run_douyin_crawler_task("14天前")
     else:
         start_cron_scheduler()     # 使用新的 cron 调度器
