@@ -38,7 +38,7 @@ def load_bot_templates() -> BotTemplates:
     )
 
 
-@dataclass(frozen=True)
+@dataclass
 class MsgBotService:
     client: lark.Client
     templates: BotTemplates = load_bot_templates()

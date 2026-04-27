@@ -13,7 +13,7 @@ from utils.date_utils import DateUtils
 from loguru import logger
 
 
-def main(relative_time: str = "140天前"):
+def main(relative_time: str = "7天前"):
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
         context = browser.contexts[0]
@@ -77,4 +77,4 @@ def main(relative_time: str = "140天前"):
             sleep(2)
 
 if __name__ == "__main__":
-    main()
+    main("7天前")
