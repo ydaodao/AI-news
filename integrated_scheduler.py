@@ -132,7 +132,7 @@ cron_scheduler = CronScheduler()
 
 def run_douyin_crawler_task(relative_time):
     """执行抖音爬虫定时任务"""
-    logger.info(f"执行抖音爬虫任务: {relative_time}")
+    logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
     douyin_crawler_main(relative_time)
 
 # ------------ 任务结束 ------------------

@@ -4,6 +4,7 @@ from datetime import timedelta
 from time import sleep
 import json
 import yaml
+from utils.file_utils import FileUtils
 from playwright.sync_api import sync_playwright, Playwright
 from collectors.douyin_crawler.network_listener import DouyinNetworkListener
 from collectors.douyin_crawler.author_page import DouyinAuthorPage
@@ -22,7 +23,8 @@ def main(relative_time: str = "7天前"):
         }
         x_days_ago = DateUtils.parse_relative_time(relative_time)
 
-        with open("collectors/douyin_crawler/author_list.yaml", "r", encoding="utf-8") as f:
+        author_list_file = FileUtils.get_path("collectors", "douyin_crawler", "author_list.yaml")
+        with open(author_list_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         for item in data["author_list"]:
             name = item["nickname"]
