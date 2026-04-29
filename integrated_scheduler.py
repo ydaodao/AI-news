@@ -146,8 +146,8 @@ def setup_cron_jobs():
     # 每天21:00执行截图任务
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
-    # 每周一、四、五的7:00执行 抖音爬虫日报任务
-    cron_scheduler.add_cron_job('0 7 * * 1,4', lambda: run_douyin_crawler_task("7天前"), '抖音爬虫日报任务')
+    # 每周一、周四的18:00执行 抖音爬虫日报任务
+    cron_scheduler.add_cron_job('0 18 * * 1,4', lambda: run_douyin_crawler_task("7天前"), '抖音爬虫日报任务')
 
 def start_cron_scheduler():
     """启动 cron 调度器"""
