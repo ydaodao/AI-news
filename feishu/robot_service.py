@@ -20,20 +20,25 @@ from feishu.robot_utils import send_message, template_card_content, build_client
 @dataclass(frozen=True)
 class BotTemplates:
     ai_news_chat_id: str
+    ai_news_gf_chat_id: str
     ai_news_card_id: str
 
 def load_bot_templates() -> BotTemplates:
     ai_news_chat_id = os.getenv("FEISHU_AINEWS_CHAT_ID", "")
+    ai_news_gf_chat_id = os.getenv("FEISHU_AINEWS_GF_CHAT_ID", "")
     ai_news_card_id = os.getenv("FEISHU_AINEWS_CARD_ID", "")
 
     if not ai_news_chat_id:
         raise ValueError("FEISHU_AINEWS_CHAT_ID is required")
+    if not ai_news_gf_chat_id:
+        raise ValueError("FEISHU_AINEWS_GF_CHAT_ID is required")
 
     if not ai_news_card_id:
         raise ValueError("FEISHU_AINEWS_CARD_ID is required")
 
     return BotTemplates(
         ai_news_chat_id=ai_news_chat_id,
+        ai_news_gf_chat_id=ai_news_gf_chat_id,
         ai_news_card_id=ai_news_card_id
     )
 

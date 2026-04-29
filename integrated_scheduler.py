@@ -130,10 +130,10 @@ cron_scheduler = CronScheduler()
 #     douyin_crawler_main(data)
 #     asyncio.run(douyin_crawler_main(data))
 
-def run_douyin_crawler_task(relative_time):
+def run_douyin_crawler_task(relative_time, send_to_gf=False):
     """执行抖音爬虫定时任务"""
     logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
-    douyin_crawler_main(relative_time)
+    douyin_crawler_main(relative_time, send_to_gf)
 
 # ------------ 任务结束 ------------------
 
@@ -147,7 +147,7 @@ def setup_cron_jobs():
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
     # 每周一、周四的7:00执行 抖音爬虫日报任务
-    cron_scheduler.add_cron_job('0 7 * * 1,4', lambda: run_douyin_crawler_task("4天前"), '抖音爬虫日报任务')
+    cron_scheduler.add_cron_job('0 7 * * 1,4', lambda: run_douyin_crawler_task("4天前", send_to_gf=True), '抖音爬虫日报任务')
 
 def start_cron_scheduler():
     """启动 cron 调度器"""
