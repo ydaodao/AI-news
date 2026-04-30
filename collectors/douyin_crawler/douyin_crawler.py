@@ -90,4 +90,4 @@ def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
             sleep(2)
 
 if __name__ == "__main__":
-    begin_crawler("150天前")
+    begin_crawler("7天前")

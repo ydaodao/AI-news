@@ -165,6 +165,6 @@ def start_cron_scheduler():
 if __name__ == "__main__":
     if LOCAL_DEV:
         logger.info("本地开发模式，不启动 cron 调度器")
-        run_douyin_crawler_task("14天前")
+        run_douyin_crawler_task("7天前")
     else:
         start_cron_scheduler()     # 使用新的 cron 调度器
