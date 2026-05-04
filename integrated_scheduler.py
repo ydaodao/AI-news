@@ -152,7 +152,7 @@ def setup_cron_jobs():
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
     # 每周二的7:00执行 抖音爬虫日报任务，广服和本地都执行
-    cron_scheduler.add_cron_job('0 7 * * 2', lambda: run_douyin_crawler_task("7天前", send_to_gf=True), '抖音爬虫日报任务')
+    cron_scheduler.add_cron_job('0 7 * * 2', lambda: run_douyin_crawler_task("7天前", send_to_gf=True), '抖音爬虫日报任务-广服')
     # 每周四、周六的7:00执行 抖音爬虫日报任务，广服和本地都执行
     cron_scheduler.add_cron_job('0 7 * * 4,6', lambda: run_douyin_crawler_task("2天前"), '抖音爬虫日报任务')
 
