@@ -60,6 +60,7 @@ def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
         
         # 构建飞书卡片数据
         # template_variable 的 new_list 按 digg_count 排序，并加上序号
+        logger.info("构建飞书卡片数据...")
         template_variable["news_list"].sort(key=lambda x: x.get("digg_count", 0), reverse=True)
         for i, item in enumerate(template_variable["news_list"]):
             item["index"] = i + 1
@@ -68,17 +69,19 @@ def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
         total_batches = math.ceil(len(template_variable["news_list"]) / batch_size)
 
         # 发送飞书卡片消息
+        logger.info("发送飞书卡片消息...")
         msg_bot_service = MsgBotService()
         for i in range(0, len(template_variable["news_list"]), batch_size):
             news_list = template_variable["news_list"][i:i+batch_size]
             # 👇 发送飞书卡片
-            logger.info(news_list)
             msg_bot_service.send_ai_news_card(template_variable={
                 "card_title": f"{DateUtils.now_str(fmt='%m-%d')} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
                 "news_list": news_list
             })
             # 发送到广服正式群
             if send_to_gf:
+                logger.info(f"发送到广服正式群...")
+                sleep(1)
                 msg_bot_service.send_ai_news_card(
                     chat_id=msg_bot_service.templates.ai_news_gf_chat_id,
                     template_variable={
