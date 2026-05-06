@@ -130,14 +130,15 @@ cron_scheduler = CronScheduler()
 #     douyin_crawler_main(data)
 #     asyncio.run(douyin_crawler_main(data))
 
-def run_douyin_crawler_task(relative_time, send_to_gf=False):
+def run_douyin_crawler_task(relative_time, send_to_gf=False, random=True):
     """执行抖音爬虫定时任务"""
     logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
     # 随机延迟十分钟，避免对抖音服务器造成过大压力
-    from random import randint
-    delay = randint(60, 60*10)
-    logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
-    time.sleep(delay)
+    if random:
+        from random import randint
+        delay = randint(60, 60*10)
+        logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
+        time.sleep(delay)
     douyin_crawler_main(relative_time, send_to_gf)
 
 # ------------ 任务结束 ------------------
@@ -165,6 +166,6 @@ def start_cron_scheduler():
 if __name__ == "__main__":
     if LOCAL_DEV:
         logger.info("本地开发模式，不启动 cron 调度器")
-        run_douyin_crawler_task("7天前")
+        run_douyin_crawler_task("7天前", random=False)
     else:
         start_cron_scheduler()     # 使用新的 cron 调度器
