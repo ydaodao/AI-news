@@ -1,7 +1,7 @@
 import random
 import time
 from utils.playwright_utils import find_element
-from collectors.douyin_crawler.anti_detect import random_sleep, random_mouse_move
+from collectors.douyin.anti_detect import random_sleep, random_mouse_move
 
 class DouyinAuthorPage:
     def __init__(self, page):

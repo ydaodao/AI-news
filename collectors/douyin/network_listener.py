@@ -84,7 +84,7 @@ class DouyinNetworkListener:
 if __name__ == "__main__":
     listener = DouyinNetworkListener()
 
-    with open("collectors/douyin_crawler/demo_video_list.json", "r", encoding="utf-8") as f:
+    with open("collectors/douyin/demo_video_list.json", "r", encoding="utf-8") as f:
         data = json.load(f)
     for item in data["aweme_list"]:
         video_info = listener.parse_video(item)

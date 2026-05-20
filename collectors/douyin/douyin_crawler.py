@@ -6,8 +6,8 @@ import json
 import yaml
 from utils.file_utils import FileUtils
 from playwright.sync_api import sync_playwright, Playwright
-from collectors.douyin_crawler.network_listener import DouyinNetworkListener
-from collectors.douyin_crawler.author_page import DouyinAuthorPage
+from collectors.douyin.network_listener import DouyinNetworkListener
+from collectors.douyin.author_page import DouyinAuthorPage
 from utils.playwright_utils import open_page
 from feishu.robot_service import MsgBotService
 from utils.date_utils import DateUtils
@@ -23,7 +23,7 @@ def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
         }
         x_days_ago = DateUtils.parse_relative_time(relative_time)
 
-        author_list_file = FileUtils.get_path("collectors", "douyin_crawler", "author_list.yaml")
+        author_list_file = FileUtils.get_path("collectors", "douyin", "author_list.yaml")
         with open(author_list_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         for item in data["author_list"]:

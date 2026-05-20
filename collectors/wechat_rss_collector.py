@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from storage.repository import sync_we_mp_rss_articles_to_wechat_rss
+from storage.mysql import sync_we_mp_rss_articles_to_wechat_rss
 
 
 def sync_window(
