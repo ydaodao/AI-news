@@ -8,20 +8,22 @@ from collectors.douyin.douyin_crawler import begin_crawler as douyin_crawler_mai
 
 # 加载环境变量
 from dotenv import load_dotenv
+
 load_dotenv()
-LOCAL_DEV = os.getenv('LOCAL_DEV') == 'true'
+LOCAL_DEV = os.getenv("LOCAL_DEV") == "true"
+
 
 class CronScheduler:
     """支持 cron 语法的定时任务调度器"""
-    
+
     def __init__(self):
         self.jobs = []
         self.running = False
-        
+
     def add_cron_job(self, cron_expression, job_func, job_name=None, *args, **kwargs):
         """
         添加 cron 定时任务
-        
+
         Args:
             cron_expression (str): cron 表达式，格式：分 时 日 月 周
                                   例如：'0 9 * * *' 表示每天9点执行
@@ -35,35 +37,35 @@ class CronScheduler:
             # 验证 cron 表达式
             cron = croniter(cron_expression, datetime.now())
             next_run = cron.get_next(datetime)
-            
+
             job = {
-                'cron_expression': cron_expression,
-                'job_func': job_func,
-                'job_name': job_name or job_func.__name__,
-                'args': args,
-                'kwargs': kwargs,
-                'next_run': next_run,
-                'cron_iter': croniter(cron_expression, datetime.now())
+                "cron_expression": cron_expression,
+                "job_func": job_func,
+                "job_name": job_name or job_func.__name__,
+                "args": args,
+                "kwargs": kwargs,
+                "next_run": next_run,
+                "cron_iter": croniter(cron_expression, datetime.now()),
             }
-            
+
             self.jobs.append(job)
             logger.info(f"已添加 cron 任务: {job['job_name']} ({cron_expression})")
             logger.info(f"下次执行时间: {next_run.strftime('%Y-%m-%d %H:%M:%S')}")
-            
+
         except Exception as e:
             logger.error(f"添加 cron 任务失败: {e}")
-    
+
     def remove_job(self, job_name):
         """移除指定名称的任务"""
-        self.jobs = [job for job in self.jobs if job['job_name'] != job_name]
+        self.jobs = [job for job in self.jobs if job["job_name"] != job_name]
         logger.info(f"已移除任务: {job_name}")
-    
+
     def list_jobs(self):
         """列出所有任务"""
         if not self.jobs:
             logger.info("当前没有定时任务")
             return
-            
+
         logger.info("\n当前定时任务列表:")
         logger.info("-" * 80)
         for job in self.jobs:
@@ -71,39 +73,45 @@ class CronScheduler:
             logger.info(f"Cron表达式: {job['cron_expression']}")
             logger.info(f"下次执行: {job['next_run'].strftime('%Y-%m-%d %H:%M:%S')}")
             logger.info("-" * 80)
-    
+
     def run_pending(self):
         """检查并执行到期的任务"""
         now = datetime.now()
-        
+
         for job in self.jobs:
-            if now >= job['next_run']:
+            if now >= job["next_run"]:
                 try:
-                    logger.info(f"\n[{now.strftime('%Y-%m-%d %H:%M:%S')}] 执行 cron 任务: {job['job_name']}")
-                    
+                    logger.info(
+                        f"\n[{now.strftime('%Y-%m-%d %H:%M:%S')}] 执行 cron 任务: {job['job_name']}"
+                    )
+
                     # 执行任务
-                    if asyncio.iscoroutinefunction(job['job_func']):
-                        asyncio.run(job['job_func'](*job['args'], **job['kwargs']))
+                    if asyncio.iscoroutinefunction(job["job_func"]):
+                        asyncio.run(job["job_func"](*job["args"], **job["kwargs"]))
                     else:
-                        job['job_func'](*job['args'], **job['kwargs'])
-                    
-                    logger.info(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 任务 {job['job_name']} 执行完成")
-                    
+                        job["job_func"](*job["args"], **job["kwargs"])
+
+                    logger.info(
+                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 任务 {job['job_name']} 执行完成"
+                    )
+
                 except Exception as e:
                     error_msg = f"执行 cron 任务 {job['job_name']} 失败: {e}"
                     logger.error(error_msg)
-                
+
                 # 修改这里：重新创建croniter对象，使用当前时间作为基准
-                job['cron_iter'] = croniter(job['cron_expression'], datetime.now())
+                job["cron_iter"] = croniter(job["cron_expression"], datetime.now())
                 # 计算下次执行时间
-                job['next_run'] = job['cron_iter'].get_next(datetime)
-                logger.info(f"任务 {job['job_name']} 下次执行时间: {job['next_run'].strftime('%Y-%m-%d %H:%M:%S')}")
-    
+                job["next_run"] = job["cron_iter"].get_next(datetime)
+                logger.info(
+                    f"任务 {job['job_name']} 下次执行时间: {job['next_run'].strftime('%Y-%m-%d %H:%M:%S')}"
+                )
+
     def start(self):
         """启动调度器"""
         self.running = True
         logger.info("Cron 调度器已启动")
-        
+
         try:
             while self.running:
                 self.run_pending()
@@ -113,11 +121,12 @@ class CronScheduler:
         except Exception as e:
             error_msg = f"Cron 调度器运行出错: {e}"
             logger.error(error_msg)
-    
+
     def stop(self):
         """停止调度器"""
         self.running = False
         logger.info("Cron 调度器已停止")
+
 
 # 创建全局 cron 调度器实例
 cron_scheduler = CronScheduler()
@@ -130,32 +139,42 @@ cron_scheduler = CronScheduler()
 #     douyin_crawler_main(data)
 #     asyncio.run(douyin_crawler_main(data))
 
+
 def run_douyin_crawler_task(relative_time, send_to_gf=False, random=True):
     """执行抖音爬虫定时任务"""
     logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
     # 随机延迟十分钟，避免对抖音服务器造成过大压力
     if random:
         from random import randint
-        delay = randint(60, 60*10)
+
+        delay = randint(60, 60 * 10)
         logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
         time.sleep(delay)
     douyin_crawler_main(relative_time, send_to_gf)
 
+
 # ------------ 任务结束 ------------------
+
 
 def setup_cron_jobs():
     """设置 cron 定时任务"""
-    
+
     # 使用 cron 语法设置任务
     # 格式：分 时 日 月 周 (0-59 0-23 1-31 1-12 0-7，其中0和7都表示周日)
-    
+
     # 每天21:00执行截图任务
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
     # 每周二的7:00执行 抖音爬虫日报任务，广服和本地都执行
     # cron_scheduler.add_cron_job('0 7 * * 2', lambda: run_douyin_crawler_task("7天前", send_to_gf=True), '抖音爬虫日报任务-广服')
     # 每周四、周六的7:00执行 抖音爬虫日报任务，广服和本地都执行
-    cron_scheduler.add_cron_job('0 7 * * 4,6', lambda: run_douyin_crawler_task("2天前"), '抖音爬虫日报任务')
+    cron_scheduler.add_cron_job(
+        "0 7 * * 2,4", lambda: run_douyin_crawler_task("2天前"), "抖音爬虫日报任务"
+    )
+    cron_scheduler.add_cron_job(
+        "0 7 * * 6", lambda: run_douyin_crawler_task("14天前"), "抖音爬虫日报任务"
+    )
+
 
 def start_cron_scheduler():
     """启动 cron 调度器"""
@@ -163,9 +182,10 @@ def start_cron_scheduler():
     cron_scheduler.list_jobs()
     cron_scheduler.start()
 
+
 if __name__ == "__main__":
     if LOCAL_DEV:
         logger.info("本地开发模式，不启动 cron 调度器")
         run_douyin_crawler_task("7天前", random=False)
     else:
-        start_cron_scheduler()     # 使用新的 cron 调度器
+        start_cron_scheduler()  # 使用新的 cron 调度器
