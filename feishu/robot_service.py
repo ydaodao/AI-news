@@ -3,18 +3,27 @@ from datetime import datetime, timezone, timedelta
 import os
 import json
 from dotenv import load_dotenv, find_dotenv
+
 load_dotenv(find_dotenv())
 
 import lark_oapi as lark
 from lark_oapi.api.application.v6 import P2ApplicationBotMenuV6
 from lark_oapi.api.im.v1 import *
-from lark_oapi.api.im.v1 import P2ImChatAccessEventBotP2pChatEnteredV1, P2ImMessageReceiveV1
+from lark_oapi.api.im.v1 import (
+    P2ImChatAccessEventBotP2pChatEnteredV1,
+    P2ImMessageReceiveV1,
+)
 from lark_oapi.event.callback.model.p2_card_action_trigger import (
     P2CardActionTrigger,
     P2CardActionTriggerResponse,
 )
 
-from feishu.robot_utils import send_message, template_card_content, build_client, load_settings
+from feishu.robot_utils import (
+    send_message,
+    template_card_content,
+    build_client,
+    load_settings,
+)
 
 
 @dataclass(frozen=True)
@@ -22,6 +31,7 @@ class BotTemplates:
     ai_news_chat_id: str
     ai_news_gf_chat_id: str
     ai_news_card_id: str
+
 
 def load_bot_templates() -> BotTemplates:
     ai_news_chat_id = os.getenv("FEISHU_AINEWS_CHAT_ID", "")
@@ -39,7 +49,7 @@ def load_bot_templates() -> BotTemplates:
     return BotTemplates(
         ai_news_chat_id=ai_news_chat_id,
         ai_news_gf_chat_id=ai_news_gf_chat_id,
-        ai_news_card_id=ai_news_card_id
+        ai_news_card_id=ai_news_card_id,
     )
 
 
@@ -50,23 +60,31 @@ class MsgBotService:
 
     def __init__(self, client: lark.Client = None):
         self.client = client or build_client(load_settings())
-    
-    def send_ai_news_card(self, chat_id: str = templates.ai_news_chat_id, template_variable: dict = None):
+
+    def send_ai_news_card(
+        self, chat_id: str = templates.ai_news_chat_id, template_variable: dict = None
+    ):
         content = template_card_content(
             template_id=self.templates.ai_news_card_id,
             template_variable=template_variable,
         )
 
-        response: CreateMessageResponse = send_message(self.client, "chat_id", chat_id, "interactive", content)
+        response: CreateMessageResponse = send_message(
+            self.client, "chat_id", chat_id, "interactive", content
+        )
         # 处理失败返回
         if not response.success():
             lark.logger.error(
-                f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+                f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}"
+            )
             return
 
         # 处理业务结果
-        lark.logger.info(f"client.im.v1.message.create success, msg_id: {response.data.message_id}")
+        lark.logger.info(
+            f"client.im.v1.message.create success, msg_id: {response.data.message_id}"
+        )
         # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
+
 
 @dataclass
 class BotService:
@@ -156,6 +174,7 @@ class BotService:
             }
         )
 
+
 # 监听交互事件
 def build_event_handler(bot: BotService) -> lark.EventDispatcherHandler:
     return (
@@ -163,6 +182,5 @@ def build_event_handler(bot: BotService) -> lark.EventDispatcherHandler:
         # .register_p2_im_chat_access_event_bot_p2p_chat_entered_v1(bot.on_p2p_chat_entered)
         # .register_p2_application_bot_menu_v6(bot.on_bot_menu)
         # .register_p2_im_message_receive_v1(bot.on_message_receive)
-        .register_p2_card_action_trigger(bot.on_card_action)
-        .build()
+        .register_p2_card_action_trigger(bot.on_card_action).build()
     )
