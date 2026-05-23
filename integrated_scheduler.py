@@ -5,6 +5,8 @@ import asyncio
 from croniter import croniter
 from loguru import logger
 from collectors.douyin.douyin_crawler import begin_crawler as douyin_crawler_main
+from collectors.wechat_rss_collector import save_wechat_articles_to_feishu_sheet
+
 
 # 加载环境变量
 from dotenv import load_dotenv
@@ -140,7 +142,7 @@ cron_scheduler = CronScheduler()
 #     asyncio.run(douyin_crawler_main(data))
 
 
-def run_douyin_crawler_task(relative_time, send_to_gf=False, random=True):
+def run_douyin_crawler_task(relative_time, write_to_sheet=False, random=True):
     """执行抖音爬虫定时任务"""
     logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
     # 随机延迟十分钟，避免对抖音服务器造成过大压力
@@ -150,7 +152,13 @@ def run_douyin_crawler_task(relative_time, send_to_gf=False, random=True):
         delay = randint(60, 60 * 10)
         logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
         time.sleep(delay)
-    douyin_crawler_main(relative_time, send_to_gf)
+    douyin_crawler_main(relative_time, write_to_sheet)
+
+
+def run_wechat_articles_task():
+    """执行微信文章推送任务"""
+    logger.info(f"执行微信文章推送任务")
+    save_wechat_articles_to_feishu_sheet()
 
 
 # ------------ 任务结束 ------------------
@@ -172,7 +180,12 @@ def setup_cron_jobs():
         "0 7 * * 2,4", lambda: run_douyin_crawler_task("2天前"), "抖音爬虫日报任务"
     )
     cron_scheduler.add_cron_job(
-        "0 7 * * 6", lambda: run_douyin_crawler_task("14天前"), "抖音爬虫日报任务"
+        "0 7 * * 6",
+        lambda: run_douyin_crawler_task("7天前", write_to_sheet=True),
+        "抖音爬虫日报任务",
+    )
+    cron_scheduler.add_cron_job(
+        "0 7 * * 6", run_wechat_articles_task, "微信文章推送任务"
     )
 
 

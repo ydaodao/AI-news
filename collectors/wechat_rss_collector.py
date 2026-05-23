@@ -3,8 +3,12 @@ from typing import Optional, Tuple, Union
 import os
 import sys
 
+from utils.date_utils import DateUtils
 from utils.db_utils import fetch_all
 from utils.feishu_sheet_utils import FeishuSheetUtils
+from loguru import logger
+
+SPREADSHEET_TOKEN = "KAu1sigLPhMLxlt0odDcXDbPnmx"
 
 
 def list_wechat_articles():
@@ -36,7 +40,6 @@ def list_wechat_articles():
         f.mp_name NOT IN ('全球风口')
     ORDER BY
         a.publish_time ASC
-    LIMIT 10
     """
 
     # 2. 函数调用变得非常清爽
@@ -46,26 +49,40 @@ def list_wechat_articles():
     return articles
 
 
-def save_wechat_articles_to_feishu_sheet(articles: list = None):
+def save_wechat_articles_to_feishu_sheet():
     articles = list_wechat_articles()
     if not articles:
         return
-    fs = FeishuSheetUtils(spreadsheet_token="ZzgQstUP2h2fHWtCwrXco2kXnyb")
 
     if len(articles) == 0:
         return
 
     data = []
     # 第一行是表头
-    sheet_title = ["type"] + list(articles[0].keys())
+    sheet_title = ["类型", "公众号", "发布时间", "标题", "描述", "链接"]
     data.append(sheet_title)
     for article in articles:
         # 根据 articles[0].keys() 来逐一获取数据，
-        row = ["wechat"]
-        row.extend([article[key] for key in sheet_title[1:]])
+        row = ["公众号"]
+        row.append(article["mp_name"])
+        row.append(article["publish_time"])
+        row.append(article["title"])
+        row.append(article["description"])
+        row.append(article["url"])
         data.append(row)
-    fs.append_rows(range="9a768f!A:E", rows_data=data)
+
+    logger.info(f"写入公众号文章 {len(data)-1}篇 至飞书表格")
+    fs = FeishuSheetUtils(spreadsheet_token=SPREADSHEET_TOKEN)
+    new_sheet = fs.add_sheet(
+        title=f"{DateUtils.now_str(fmt="%m.%d")}公众号", index=0, delete_if_exists=True
+    )
+    new_sheet_id = new_sheet["replies"][0]["addSheet"]["properties"]["sheetId"]
+
+    fs.append_rows(range=f"{new_sheet_id}!A:E", rows_data=data)
+    logger.info(f"写入完毕")
 
 
 if __name__ == "__main__":
+    # 测试环境用这个 token
+    SPREADSHEET_TOKEN = "ZzgQstUP2h2fHWtCwrXco2kXnyb"
     save_wechat_articles_to_feishu_sheet()

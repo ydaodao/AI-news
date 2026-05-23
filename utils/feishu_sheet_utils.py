@@ -353,10 +353,15 @@ class FeishuSheetUtils:
         self,
         title: str,
         index: int = 0,
+        delete_if_exists: bool = False,
     ):
         """
         添加 sheet
         """
+        if delete_if_exists:
+            sheet_id = self.get_sheet_id(title)
+            if sheet_id:
+                self.delete_sheet(sheet_id)
         return self.sheet_batch_update(
             [
                 {

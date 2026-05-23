@@ -12,20 +12,25 @@ from utils.playwright_utils import open_page
 from feishu.robot_service import MsgBotService
 from utils.date_utils import DateUtils
 from loguru import logger
+from utils.feishu_sheet_utils import FeishuSheetUtils
+
+SPREADSHEET_TOKEN = "KAu1sigLPhMLxlt0odDcXDbPnmx"
 
 
-def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
+def begin_crawler(relative_time: str = "7天前", write_to_sheet: bool = False):
     with sync_playwright() as p:
         browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
         context = browser.contexts[0]
-        template_variable = {
-            "news_list": []
-        }
+        template_variable = {"news_list": []}
         x_days_ago = DateUtils.parse_relative_time(relative_time)
 
-        author_list_file = FileUtils.get_path("collectors", "douyin", "author_list.yaml")
+        author_list_file = FileUtils.get_path(
+            "collectors", "douyin", "author_list.yaml"
+        )
         with open(author_list_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
+
+        video_list = []
         for item in data["author_list"]:
             name = item["nickname"]
             url = item["main_page_url"]
@@ -37,60 +42,98 @@ def begin_crawler(relative_time: str = "7天前", send_to_gf: bool = False):
             user_info = douyin.get_user_info()
             logger.info(user_info)
 
-            # 👇 触发接口加载（关键）
-            # douyin.scroll_page()
-
             # 👇 直接拿接口数据
             logger.info(f"获取到【{name}】的{len(listener.video_list)}条视频")
-            for v in listener.video_list:
-                creat_time_dt = DateUtils.str_to_datetime(v["create_time"])
-
-                # 如果create_time 在最近x天内，才添加到news_list
-                if creat_time_dt > x_days_ago:
-                    template_variable["news_list"].append({
-                        "date": DateUtils.str_to_str(v["create_time"], to_fmt="%m.%d"),
-                        "title": f"{v['title']} - {v['digg_count']}赞 {v['nickname']}",
-                        "content": v["desc"],
-                        "url": v["play_url"],
-                        "digg_count": v["digg_count"]
-                    })
+            video_list.extend(listener.video_list)
 
             # 👇 关闭页面
             page.close()
-        
-        # 构建飞书卡片数据
-        # template_variable 的 new_list 按 digg_count 排序，并加上序号
-        logger.info("构建飞书卡片数据...")
-        template_variable["news_list"].sort(key=lambda x: x.get("digg_count", 0), reverse=True)
-        for i, item in enumerate(template_variable["news_list"]):
-            item["index"] = i + 1
-        # template_variable 分每20条发送一次
-        batch_size = 20
-        total_batches = math.ceil(len(template_variable["news_list"]) / batch_size)
 
-        # 发送飞书卡片消息
-        logger.info("发送飞书卡片消息...")
-        msg_bot_service = MsgBotService()
-        for i in range(0, len(template_variable["news_list"]), batch_size):
-            news_list = template_variable["news_list"][i:i+batch_size]
-            # 👇 发送飞书卡片
-            msg_bot_service.send_ai_news_card(template_variable={
+        # video_list 按 creat_time_dt > x_days_ago 过滤
+        video_list = [
+            v
+            for v in video_list
+            if DateUtils.str_to_datetime(v["create_time"]) > x_days_ago
+        ]
+        # video_list 按 digg_count 排序
+        video_list.sort(key=lambda x: x.get("digg_count", 0), reverse=True)
+
+        # template_variable 的 new_list 按 digg_count 排序
+        template_variable["news_list"].sort(
+            key=lambda x: x.get("digg_count", 0), reverse=True
+        )
+
+        # 构建飞书卡片数据
+        send_feishu_card(video_list)
+
+        # 写入飞书表格
+        if write_to_sheet:
+            save_douyin_videos_to_feishu_sheet(video_list)
+
+
+def send_feishu_card(video_list):
+    template_variable = {"news_list": []}
+    for i, v in enumerate(video_list):
+        template_variable["news_list"].append(
+            {
+                "index": i + 1,
+                "date": DateUtils.str_to_str(v["create_time"], to_fmt="%m.%d"),
+                "title": f"{v['title']} - {v['digg_count']}赞 {v['nickname']}",
+                "content": v["desc"],
+                "url": v["play_url"],
+                "digg_count": v["digg_count"],
+            }
+        )
+
+    logger.info("构建飞书卡片数据...")
+    batch_size = 20
+    total_batches = math.ceil(len(template_variable["news_list"]) / batch_size)
+
+    # 发送飞书卡片消息
+    logger.info("发送飞书卡片消息...")
+    msg_bot_service = MsgBotService()
+    for i in range(0, len(template_variable["news_list"]), batch_size):
+        news_list = template_variable["news_list"][i : i + batch_size]
+        # 👇 发送飞书卡片
+        msg_bot_service.send_ai_news_card(
+            template_variable={
                 "card_title": f"{DateUtils.now_str(fmt='%m-%d')} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
-                "news_list": news_list
-            })
-            # 发送到广服正式群
-            if send_to_gf:
-                logger.info(f"发送到广服正式群...")
-                sleep(1)
-                msg_bot_service.send_ai_news_card(
-                    chat_id=msg_bot_service.templates.ai_news_gf_chat_id,
-                    template_variable={
-                        "card_title": f"{DateUtils.now_str(fmt='%m-%d')} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
-                        "news_list": news_list
-                    }
-                )
-            # 睡眠2秒，避免对抖音服务器造成过大压力
-            sleep(2)
+                "news_list": news_list,
+            }
+        )
+        sleep(2)
+
+
+def save_douyin_videos_to_feishu_sheet(video_list: list = None):
+    if not video_list:
+        return
+    if len(video_list) == 0:
+        return
+    data = []
+    # 第一行是表头
+    sheet_title = ["类型", "抖音号", "标题", "描述", "点赞", "链接", "发布时间"]
+    data.append(sheet_title)
+    for video in video_list:
+        row = ["抖音视频"]
+        row.append(video["nickname"])
+        row.append(video["title"])
+        row.append(video["desc"])
+        row.append(video["digg_count"])
+        row.append(video["play_url"])
+        row.append(video["create_time"])
+        data.append(row)
+
+    logger.info(f"写入抖音视频 {len(data)-1}条 至飞书表格")
+    fs = FeishuSheetUtils(spreadsheet_token=SPREADSHEET_TOKEN)
+    new_sheet = fs.add_sheet(
+        title=f"{DateUtils.now_str(fmt="%m.%d")}抖音", index=0, delete_if_exists=True
+    )
+    new_sheet_id = new_sheet["replies"][0]["addSheet"]["properties"]["sheetId"]
+    fs.append_rows(range=f"{new_sheet_id}!A:G", rows_data=data)
+    logger.info(f"写入完毕")
+
 
 if __name__ == "__main__":
-    begin_crawler("7天前")
+    # 测试环境用这个 token
+    SPREADSHEET_TOKEN = "ZzgQstUP2h2fHWtCwrXco2kXnyb"
+    begin_crawler("14天前", write_to_sheet=True)
