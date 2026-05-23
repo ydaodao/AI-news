@@ -11,7 +11,7 @@ from loguru import logger
 SPREADSHEET_TOKEN = "KAu1sigLPhMLxlt0odDcXDbPnmx"
 
 
-def list_wechat_articles():
+def list_wechat_articles(x_days):
     # 1. 将 SQL 提取为独立变量，并去掉了无意义的子查询
     SQL_QUERY = """
     SELECT
@@ -29,7 +29,7 @@ def list_wechat_articles():
         FROM_UNIXTIME(publish_time, '%%Y-%%m-%%d %%H:%%i:%%s') AS publish_time, 
         url
         FROM articles
-        WHERE publish_time > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY))
+        WHERE publish_time > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL %s DAY))
     ) a
     LEFT JOIN
     (
@@ -44,13 +44,15 @@ def list_wechat_articles():
 
     # 2. 函数调用变得非常清爽
     articles = fetch_all(
-        database_env_name="ALI22_MYSQL_DATABASE_WECHATRSS_NAME", sql=SQL_QUERY
+        database_env_name="ALI22_MYSQL_DATABASE_WECHATRSS_NAME",
+        sql=SQL_QUERY,
+        params=(x_days,),
     )
     return articles
 
 
-def save_wechat_articles_to_feishu_sheet():
-    articles = list_wechat_articles()
+def save_wechat_articles_to_feishu_sheet(x_days):
+    articles = list_wechat_articles(x_days)
     if not articles:
         return
 
@@ -74,7 +76,9 @@ def save_wechat_articles_to_feishu_sheet():
     logger.info(f"写入公众号文章 {len(data)-1}篇 至飞书表格")
     fs = FeishuSheetUtils(spreadsheet_token=SPREADSHEET_TOKEN)
     new_sheet = fs.add_sheet(
-        title=f"{DateUtils.now_str(fmt="%m.%d")}公众号", index=0, delete_if_exists=True
+        title=f"{DateUtils.now_str(fmt='%m.%d')}公众号-近{x_days}天",
+        index=0,
+        delete_if_exists=True,
     )
     new_sheet_id = new_sheet["replies"][0]["addSheet"]["properties"]["sheetId"]
 
@@ -85,4 +89,4 @@ def save_wechat_articles_to_feishu_sheet():
 if __name__ == "__main__":
     # 测试环境用这个 token
     SPREADSHEET_TOKEN = "ZzgQstUP2h2fHWtCwrXco2kXnyb"
-    save_wechat_articles_to_feishu_sheet()
+    save_wechat_articles_to_feishu_sheet(7)

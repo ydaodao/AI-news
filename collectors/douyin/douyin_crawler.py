@@ -63,15 +63,18 @@ def begin_crawler(relative_time: str = "7天前", write_to_sheet: bool = False):
             key=lambda x: x.get("digg_count", 0), reverse=True
         )
 
+        # 提取 relative_time 的数字
+        x_days = int(relative_time.replace("天前", ""))
+
         # 构建飞书卡片数据
-        send_feishu_card(video_list)
+        send_feishu_card(video_list, x_days)
 
         # 写入飞书表格
         if write_to_sheet:
-            save_douyin_videos_to_feishu_sheet(video_list)
+            save_douyin_videos_to_feishu_sheet(video_list, x_days)
 
 
-def send_feishu_card(video_list):
+def send_feishu_card(video_list, x_days):
     template_variable = {"news_list": []}
     for i, v in enumerate(video_list):
         template_variable["news_list"].append(
@@ -97,14 +100,14 @@ def send_feishu_card(video_list):
         # 👇 发送飞书卡片
         msg_bot_service.send_ai_news_card(
             template_variable={
-                "card_title": f"{DateUtils.now_str(fmt='%m-%d')} {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
+                "card_title": f"{DateUtils.now_str(fmt='%m.%d')}-近{x_days}天 {len(news_list)}条AI资讯 ({i//batch_size+1}/{total_batches})",
                 "news_list": news_list,
             }
         )
         sleep(2)
 
 
-def save_douyin_videos_to_feishu_sheet(video_list: list = None):
+def save_douyin_videos_to_feishu_sheet(video_list, x_days):
     if not video_list:
         return
     if len(video_list) == 0:
@@ -126,7 +129,9 @@ def save_douyin_videos_to_feishu_sheet(video_list: list = None):
     logger.info(f"写入抖音视频 {len(data)-1}条 至飞书表格")
     fs = FeishuSheetUtils(spreadsheet_token=SPREADSHEET_TOKEN)
     new_sheet = fs.add_sheet(
-        title=f"{DateUtils.now_str(fmt="%m.%d")}抖音", index=0, delete_if_exists=True
+        title=f"{DateUtils.now_str(fmt='%m.%d')}抖音-近{x_days}天",
+        index=0,
+        delete_if_exists=True,
     )
     new_sheet_id = new_sheet["replies"][0]["addSheet"]["properties"]["sheetId"]
     fs.append_rows(range=f"{new_sheet_id}!A:G", rows_data=data)
