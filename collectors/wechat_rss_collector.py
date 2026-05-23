@@ -51,7 +51,7 @@ def list_wechat_articles(x_days):
     return articles
 
 
-def save_wechat_articles_to_feishu_sheet(x_days):
+def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
     articles = list_wechat_articles(x_days)
     if not articles:
         return

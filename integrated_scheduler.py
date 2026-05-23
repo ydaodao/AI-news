@@ -158,7 +158,7 @@ def run_douyin_crawler_task(relative_time, write_to_sheet=False, random=True):
 def run_wechat_articles_task():
     """执行微信文章推送任务"""
     logger.info(f"执行微信文章推送任务")
-    save_wechat_articles_to_feishu_sheet()
+    save_wechat_articles_to_feishu_sheet(x_days=7)
 
 
 # ------------ 任务结束 ------------------
