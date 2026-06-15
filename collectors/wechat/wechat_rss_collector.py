@@ -51,7 +51,7 @@ def list_wechat_articles(x_days):
     return articles
 
 
-def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
+def push_wechat_articles_to_feishu_sheet(x_days: int = 7):
     articles = list_wechat_articles(x_days)
     if not articles:
         return
@@ -89,4 +89,4 @@ def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
 if __name__ == "__main__":
     # 测试环境用这个 token
     SPREADSHEET_TOKEN = "ZzgQstUP2h2fHWtCwrXco2kXnyb"
-    save_wechat_articles_to_feishu_sheet(7)
+    push_wechat_articles_to_feishu_sheet(7)
