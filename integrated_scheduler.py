@@ -189,7 +189,7 @@ def setup_cron_jobs():
 
     # for抓取用
     cron_scheduler.add_cron_job(
-        "0 9 * * 4", run_we_mp_rss_crawler_task, "微信文章抓取任务"
+        "0 9,21 * * *", run_we_mp_rss_crawler_task, "微信文章抓取任务"
     )
 
     # for 推送用
