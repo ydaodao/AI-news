@@ -64,7 +64,9 @@ def push_wechat_articles_to_feishu_sheet(x_days: int = 7):
     sheet_title = ["类型", "公众号", "发布时间", "标题", "描述", "链接"]
     data.append(sheet_title)
     for article in articles:
-        # 根据 articles[0].keys() 来逐一获取数据，
+        # 根据 articles[0].keys() 来逐一获取数据
+        if len(article["title"]) > 50:
+            continue
         row = ["公众号"]
         row.append(article["mp_name"])
         row.append(article["publish_time"])

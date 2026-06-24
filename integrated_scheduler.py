@@ -183,9 +183,9 @@ def setup_cron_jobs():
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
     # for 学习用
-    cron_scheduler.add_cron_job(
-        "0 7 * * 7", lambda: run_douyin_crawler_task("10天前"), "抖音爬虫学习任务"
-    )
+    # cron_scheduler.add_cron_job(
+    #     "0 7 * * 7", lambda: run_douyin_crawler_task("10天前"), "抖音爬虫学习任务"
+    # )
 
     # for抓取用
     cron_scheduler.add_cron_job(
@@ -196,7 +196,7 @@ def setup_cron_jobs():
     cron_scheduler.add_cron_job(
         "0 7 * * 4",
         lambda: run_douyin_crawler_task("7天前", write_to_sheet=True),
-        "抖音爬虫广服任务",
+        "抖音视频推送任务",
     )
     cron_scheduler.add_cron_job(
         "0 7 * * 4", run_push_wechat_articles_task, "微信文章推送任务"
