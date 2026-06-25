@@ -6,6 +6,7 @@ import sys
 from utils.date_utils import DateUtils
 from utils.db_utils import fetch_all
 from utils.feishu_sheet_utils import FeishuSheetUtils
+from feishu.webhook_utils import send_interactive_card
 from loguru import logger
 
 SPREADSHEET_TOKEN = "KAu1sigLPhMLxlt0odDcXDbPnmx"
@@ -84,6 +85,23 @@ def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
 
     fs.append_rows(range=f"{new_sheet_id}!A:E", rows_data=data)
     logger.info(f"写入完毕")
+
+    send_feishu_card(len(data)-1)
+
+def send_feishu_card(wechat_articles_len: int):
+    send_interactive_card(
+        template_id="AAqeoJVruijGV",
+        template_variable={
+            "card_title": f"AI咨询抓取通知，共 {wechat_articles_len} 篇文章",
+            "list": [
+                {
+                    "title": "广服AI资讯list - 飞书文档",
+                    "title_url": "https://mcnykhna2ccs.feishu.cn/sheets/KAu1sigLPhMLxlt0odDcXDbPnmx?sheet=2fkGSQ",
+                }
+            ]
+        },
+        webhook_url="https://open.feishu.cn/open-apis/bot/v2/hook/424824fb-f84e-4f2a-8082-552c7f338cd8",
+    )
 
 
 if __name__ == "__main__":
