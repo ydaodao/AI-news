@@ -157,6 +157,11 @@ class DateUtils:
         return datetime.now(DateUtils.TZ_CN).strftime(fmt)
 
     @staticmethod
+    def now_dt() -> datetime:
+        """获取当前时间的datetime对象"""
+        return datetime.now(DateUtils.TZ_CN)
+
+    @staticmethod
     def now_timestamp(unit: str = "s") -> Union[int, float]:
         """获取当前时间戳"""
         ts = datetime.now(DateUtils.TZ_CN).timestamp()

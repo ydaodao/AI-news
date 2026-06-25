@@ -5,7 +5,8 @@ import asyncio
 from croniter import croniter
 from loguru import logger
 from collectors.douyin.douyin_crawler import begin_crawler as douyin_crawler_main
-from collectors.wechat_rss_collector import save_wechat_articles_to_feishu_sheet
+from collectors.wechat.wechat_rss_collector import push_wechat_articles_to_feishu_sheet
+from collectors.wechat.we_mp_rss import begin_crawler as we_mp_rss_crawler_main
 
 
 # 加载环境变量
@@ -141,24 +142,33 @@ cron_scheduler = CronScheduler()
 #     douyin_crawler_main(data)
 #     asyncio.run(douyin_crawler_main(data))
 
+def random_delay(min_minutes=1, max_minutes=10):
+    """随机延迟指定分钟数，避免对抖音服务器造成过大压力"""
+    from random import randint
+
+    delay = randint(60 * min_minutes, 60 * max_minutes)
+    logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
+    time.sleep(delay)
 
 def run_douyin_crawler_task(relative_time, write_to_sheet=False, random=True):
     """执行抖音爬虫定时任务"""
     logger.info(f"执行抖音爬虫任务: 过滤范围{relative_time}")
     # 随机延迟十分钟，避免对抖音服务器造成过大压力
     if random:
-        from random import randint
-
-        delay = randint(60, 60 * 10)
-        logger.info(f"随机延迟 {delay//60} 分钟 {delay%60} 秒后执行")
-        time.sleep(delay)
+        random_delay()
     douyin_crawler_main(relative_time, write_to_sheet)
 
 
-def run_wechat_articles_task():
+def run_push_wechat_articles_task():
     """执行微信文章推送任务"""
     logger.info(f"执行微信文章推送任务")
-    save_wechat_articles_to_feishu_sheet(x_days=7)
+    push_wechat_articles_to_feishu_sheet(x_days=7)
+
+def run_we_mp_rss_crawler_task():
+    """执行微信文章抓取任务"""
+    logger.info(f"执行微信文章抓取任务")
+    random_delay()
+    we_mp_rss_crawler_main()
 
 
 # ------------ 任务结束 ------------------
@@ -169,25 +179,28 @@ def setup_cron_jobs():
 
     # 使用 cron 语法设置任务
     # 格式：分 时 日 月 周 (0-59 0-23 1-31 1-12 0-7，其中0和7都表示周日)
-
     # 每天21:00执行截图任务
     # cron_scheduler.add_cron_job('0 21 * * *', screenshot_task, '截图检查任务')
 
-    # 每周二的7:00执行 抖音爬虫日报任务，广服和本地都执行
-    # cron_scheduler.add_cron_job('0 7 * * 2', lambda: run_douyin_crawler_task("7天前", send_to_gf=True), '抖音爬虫日报任务-广服')
-    # 每周四、周六的7:00执行 抖音爬虫日报任务，广服和本地都执行
+    # for 学习用
+    # cron_scheduler.add_cron_job(
+    #     "0 7 * * 7", lambda: run_douyin_crawler_task("10天前"), "抖音爬虫学习任务"
+    # )
+
+    # for抓取用
     cron_scheduler.add_cron_job(
-        "0 7 * * 2,4", lambda: run_douyin_crawler_task("2天前"), "抖音爬虫日报任务"
-    )
-    cron_scheduler.add_cron_job(
-        "0 7 * * 6",
-        lambda: run_douyin_crawler_task("7天前", write_to_sheet=True),
-        "抖音爬虫日报任务",
-    )
-    cron_scheduler.add_cron_job(
-        "0 7 * * 6", run_wechat_articles_task, "微信文章推送任务"
+        "0 9,21 * * *", run_we_mp_rss_crawler_task, "微信文章抓取任务"
     )
 
+    # for 推送用
+    cron_scheduler.add_cron_job(
+        "0 7 * * 4",
+        lambda: run_douyin_crawler_task("7天前", write_to_sheet=True),
+        "抖音视频推送任务",
+    )
+    cron_scheduler.add_cron_job(
+        "0 7 * * 4", run_push_wechat_articles_task, "微信文章推送任务"
+    )
 
 def start_cron_scheduler():
     """启动 cron 调度器"""
@@ -199,6 +212,7 @@ def start_cron_scheduler():
 if __name__ == "__main__":
     if LOCAL_DEV:
         logger.info("本地开发模式，不启动 cron 调度器")
-        run_douyin_crawler_task("7天前", random=False)
+        # run_douyin_crawler_task("7天前", write_to_sheet=True, random=False)
+        # run_wechat_articles_task()
     else:
         start_cron_scheduler()  # 使用新的 cron 调度器

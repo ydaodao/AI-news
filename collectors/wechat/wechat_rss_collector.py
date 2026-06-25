@@ -52,7 +52,7 @@ def list_wechat_articles(x_days):
     return articles
 
 
-def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
+def push_wechat_articles_to_feishu_sheet(x_days: int = 7):
     articles = list_wechat_articles(x_days)
     if not articles:
         return
@@ -65,7 +65,9 @@ def save_wechat_articles_to_feishu_sheet(x_days: int = 7):
     sheet_title = ["类型", "公众号", "发布时间", "标题", "描述", "链接"]
     data.append(sheet_title)
     for article in articles:
-        # 根据 articles[0].keys() 来逐一获取数据，
+        # 根据 articles[0].keys() 来逐一获取数据
+        if len(article["title"]) > 50:
+            continue
         row = ["公众号"]
         row.append(article["mp_name"])
         row.append(article["publish_time"])
@@ -107,4 +109,4 @@ def send_feishu_card(wechat_articles_len: int):
 if __name__ == "__main__":
     # 测试环境用这个 token
     SPREADSHEET_TOKEN = "ZzgQstUP2h2fHWtCwrXco2kXnyb"
-    save_wechat_articles_to_feishu_sheet(7)
+    push_wechat_articles_to_feishu_sheet(7)

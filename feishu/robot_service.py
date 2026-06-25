@@ -28,16 +28,20 @@ from feishu.robot_utils import (
 
 @dataclass(frozen=True)
 class BotTemplates:
+    general_card_id: str
     ai_news_chat_id: str
     ai_news_gf_chat_id: str
     ai_news_card_id: str
 
 
 def load_bot_templates() -> BotTemplates:
+    general_card_id = os.getenv("FEISHU_GENERAL_CARD_ID", "")
     ai_news_chat_id = os.getenv("FEISHU_AINEWS_CHAT_ID", "")
     ai_news_gf_chat_id = os.getenv("FEISHU_AINEWS_GF_CHAT_ID", "")
     ai_news_card_id = os.getenv("FEISHU_AINEWS_CARD_ID", "")
 
+    if not general_card_id:
+        raise ValueError("FEISHU_GENERAL_CARD_ID is required")
     if not ai_news_chat_id:
         raise ValueError("FEISHU_AINEWS_CHAT_ID is required")
     if not ai_news_gf_chat_id:
@@ -47,6 +51,7 @@ def load_bot_templates() -> BotTemplates:
         raise ValueError("FEISHU_AINEWS_CARD_ID is required")
 
     return BotTemplates(
+        general_card_id=general_card_id,
         ai_news_chat_id=ai_news_chat_id,
         ai_news_gf_chat_id=ai_news_gf_chat_id,
         ai_news_card_id=ai_news_card_id,
@@ -83,6 +88,22 @@ class MsgBotService:
         lark.logger.info(
             f"client.im.v1.message.create success, msg_id: {response.data.message_id}"
         )
+        # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
+    
+    def send_general_card(self, chat_id: str = templates.ai_news_chat_id, template_variable: dict = None):
+        content = template_card_content(
+            template_id=self.templates.general_card_id,
+            template_variable=template_variable,
+        )
+        response: CreateMessageResponse = send_message(self.client, "chat_id", chat_id, "interactive", content)
+        # 处理失败返回
+        if not response.success():
+            lark.logger.error(
+                f"client.im.v1.message.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+            return
+
+        # 处理业务结果
+        lark.logger.info(f"client.im.v1.message.create success, msg_id: {response.data.message_id}")
         # lark.logger.debug(lark.JSON.marshal(response.data, indent=4))
 
 
