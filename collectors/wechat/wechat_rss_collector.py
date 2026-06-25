@@ -88,9 +88,9 @@ def push_wechat_articles_to_feishu_sheet(x_days: int = 7):
     fs.append_rows(range=f"{new_sheet_id}!A:E", rows_data=data)
     logger.info(f"写入完毕")
 
-    send_feishu_card(len(data)-1)
+    send_feishu_card(len(data)-1, new_sheet_id)
 
-def send_feishu_card(wechat_articles_len: int):
+def send_feishu_card(wechat_articles_len: int, new_sheet_id: str):
     send_interactive_card(
         template_id="AAqeoJVruijGV",
         template_variable={
@@ -98,7 +98,7 @@ def send_feishu_card(wechat_articles_len: int):
             "list": [
                 {
                     "title": "广服AI资讯list - 飞书文档",
-                    "title_url": "https://mcnykhna2ccs.feishu.cn/sheets/KAu1sigLPhMLxlt0odDcXDbPnmx?sheet=2fkGSQ",
+                    "title_url": f"https://mcnykhna2ccs.feishu.cn/sheets/KAu1sigLPhMLxlt0odDcXDbPnmx?sheet={new_sheet_id}",
                 }
             ]
         },
